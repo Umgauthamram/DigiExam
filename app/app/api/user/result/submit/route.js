@@ -7,6 +7,7 @@ import Result from '@/models/Result';
 import { NextResponse } from 'next/server';
 
 import jwt from 'jsonwebtoken';
+import { submitResultOnWeb3, logViolationOnWeb3 } from '@/lib/web3';
 
 export async function POST(req) {
     try {
@@ -43,12 +44,10 @@ export async function POST(req) {
             const isCorrect = selectedIdx === correctIdx;
             if (isCorrect) score++;
 
-            // AI Explanation for wrong answers
+            // AI Explanation for wrong answers (Pre-generated during upload)
             let aiExplanation = null;
             if (!isCorrect && selectedOptText) {
-                // In a real app, this would be an async queue or background job to avoid blocking
-                // For now, we await a quick mock generation
-                aiExplanation = await generateMockAiExplanation(q.text, selectedOptText, q.options[correctIdx].text);
+                aiExplanation = q.options[selectedIdx]?.explanation || q.aiExplanation || "No explanation recorded.";
             }
 
             processedAnswers.push({
@@ -71,6 +70,36 @@ export async function POST(req) {
             answers: processedAnswers
         });
 
+        // Compute On-Chain Result Hash (SHA-256)
+        const crypto = require('crypto');
+        const hashPayload = `${result._id.toString()}-${examId}-${userId}-${score}-${violations || 0}`;
+        const resultHash = "0x" + crypto.createHash('sha256').update(hashPayload).digest('hex');
+
+        // Submit to Web3 Immutable Ledger
+        submitResultOnWeb3(result._id.toString(), examId, resultHash, "0x0000000000000000000000000000000000000000")
+            .catch(err => console.error("Web3 Hash Sync Error:", err));
+
+        // Immutable Violation Logging
+        if (violations > 0) {
+            logViolationOnWeb3(userId, examId, violationReason || "Security Policy Violation")
+                .catch(err => console.error("Web3 Violation Sync Error:", err));
+        }
+
+        // Email Notification
+        const User = require('@/models/User').default;
+        const { sendEmail, buildResultEmailHtml } = require('@/lib/email');
+        
+        User.findById(userId).then(userDoc => {
+            if (userDoc && userDoc.email && exam) {
+                const html = buildResultEmailHtml(exam.title, score, questions.length, violations);
+                sendEmail({ 
+                    to: userDoc.email, 
+                    subject: `DigiExam Analytics: Your Secure Result for ${exam.title}`, 
+                    html 
+                }).catch(e => console.error("Email Broadcast Error:", e));
+            }
+        }).catch(e => console.error("User fetch error for email:", e));
+
         return NextResponse.json({ message: 'Exam Submitted', resultId: result._id }, { status: 201 });
 
     } catch (error) {
@@ -79,28 +108,4 @@ export async function POST(req) {
     }
 }
 
-async function generateMockAiExplanation(question, wrongAnswer, rightAnswer) {
-    // 1. Check for API Key
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        // Fallback to Mock if no key
-        await new Promise(r => setTimeout(r, 500));
-        return `Analysis (Mock): You selected "${wrongAnswer}" which is incorrect. The correct answer is "${rightAnswer}". (Add GEMINI_API_KEY to .env.local for real AI)`;
-    }
 
-    try {
-        // 2. Call Gemini 1.5 Flash
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
-
-        const prompt = `Explain strictly and concisely why "${wrongAnswer}" is incorrect and "${rightAnswer}" is correct for the Question: "${question}". 
-        Focus on the reasoning. Max 2-3 sentences. Do not mention "Step 1" or markdown formatting.`;
-
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Gemini API Error:", error);
-        return `Analysis Failed: Unable to generate explanation at this time. Correct Answer: ${rightAnswer}`;
-    }
-}

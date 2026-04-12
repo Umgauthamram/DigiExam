@@ -2,6 +2,7 @@ import dbConnect from '@/lib/db';
 import Question from '@/models/Question';
 import Exam from '@/models/Exam';
 import { NextResponse } from 'next/server';
+import { generateQuestionAnalysis } from '@/lib/ai';
 
 // 1. GET: Fetch all questions for an exam
 export async function GET(req, { params }) {
@@ -51,6 +52,19 @@ export async function POST(req, { params }) {
             return NextResponse.json({ message: 'Invalid data' }, { status: 400 });
         }
 
+        let aiData = [];
+        try {
+            // Assign temporary IDs for AI to map responses back to correctly
+            const tempQuestions = questions.map((q, i) => ({ 
+                _id: i.toString(), 
+                text: q.text, 
+                options: q.options 
+            }));
+            aiData = await generateQuestionAnalysis(tempQuestions);
+        } catch(e) {
+            console.error("AI Gen Failed before insert, saving without AI.");
+        }
+
         const createdQuestions = [];
 
         // Safety: If examId is a legacy string (from old mock mode), don't try to save to DB (it will crash)
@@ -67,10 +81,20 @@ export async function POST(req, { params }) {
             }, { status: 201 });
         }
 
-        for (const q of questions) {
+        for (let i = 0; i < questions.length; i++) {
+            const q = questions[i];
+            const aiInfo = aiData.find(a => a.id === i.toString()) || {};
+            
+            const mappedOptions = q.options.map((opt, optIdx) => ({
+                text: opt.text,
+                isCorrect: opt.isCorrect,
+                explanation: aiInfo.optionExplanations ? aiInfo.optionExplanations[optIdx] : ''
+            }));
+
             const newQuestion = await Question.create({
                 text: q.text,
-                options: q.options,
+                options: mappedOptions,
+                aiExplanation: aiInfo.aiExplanation || '',
                 examId: examId,
                 correctOptionIndex: q.correctOptionIndex
             });

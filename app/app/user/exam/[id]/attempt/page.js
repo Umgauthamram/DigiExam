@@ -123,25 +123,46 @@ export default function ExamAttemptPage({ params }) {
             const isFS = !!document.fullscreenElement;
             setIsFullScreen(isFS);
             if (!isFS && !isSubmitted) {
-                // If they leave FS, it's a violation unless it's the very first load (handled by isFullScreen false init)
-                // But violationsRef check ensures we don't loop on init if count is 0.
-                // However, user wants strict. If they exit, we record.
-                // We add a check: if violations > 0 OR we have clearly started (time passed?).
-                // Simplest: If they exit FS, record it. (If they are 0, they get 1 and kicked out).
                 if (violationsRef.current > 0 || isSubmittingRef.current === false) {
                     recordViolation('Exited Full Screen Mode');
                 }
             }
         };
 
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey || e.metaKey || e.altKey) {
+                e.preventDefault();
+                recordViolation('Keyboard Shortcut Blocked');
+            }
+        };
+
+        const handleMouseLeave = (e) => {
+            // If mouse goes out of viewport
+            if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+                recordViolation('Mouse Exited Window');
+            }
+        };
+
+        const handleResize = () => {
+            if (window.outerHeight - window.innerHeight > 160) {
+                recordViolation('Developer Tools / Dock Open');
+            }
+        };
+
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('blur', handleBlur);
         document.addEventListener('fullscreenchange', handleFullScreenChange);
+        window.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('mouseleave', handleMouseLeave);
+        window.addEventListener('resize', handleResize);
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('blur', handleBlur);
             document.removeEventListener('fullscreenchange', handleFullScreenChange);
+            window.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('mouseleave', handleMouseLeave);
+            window.removeEventListener('resize', handleResize);
         };
     }, [examId, isSubmitted, exam]);
 
@@ -425,7 +446,10 @@ export default function ExamAttemptPage({ params }) {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white flex flex-col md:flex-row relative overflow-hidden font-sans">
+        <div 
+            onContextMenu={(e) => e.preventDefault()}
+            className="min-h-screen bg-slate-950 text-white flex flex-col md:flex-row relative overflow-hidden font-sans select-none"
+        >
             <Toaster position="top-center" richColors theme="dark" />
 
             {/* Ambient Background */}

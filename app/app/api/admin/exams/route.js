@@ -1,6 +1,9 @@
 import dbConnect from '@/lib/db';
 import Exam from '@/models/Exam';
+import AuditLog from '@/models/AuditLog';
 import { NextResponse } from 'next/server';
+import { createExamOnWeb3 } from '@/lib/web3';
+import jwt from 'jsonwebtoken';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,11 +12,18 @@ export async function POST(req) {
         try {
             await dbConnect();
         } catch (e) {
-            // Fallback for Mock Mode if DB fails
-            return NextResponse.json({
-                message: 'Mock Exam Created',
-                exam: { _id: Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join('') }
-            }, { status: 201 });
+            return NextResponse.json({ message: 'Mock Exam Created', exam: { _id: Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join('') } }, { status: 201 });
+        }
+
+        let adminIdentifier = 'System';
+        try {
+            const token = req.cookies.get('token')?.value;
+            if (token) {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret');
+                adminIdentifier = decoded.email || decoded.name || 'Admin';
+            }
+        } catch (err) {
+            console.warn("Audit Log Token Decode warning", err);
         }
 
         const body = await req.json();
@@ -24,10 +34,21 @@ export async function POST(req) {
             durationMinutes: body.durationMinutes,
             scheduledAt: body.scheduledAt,
             supervisorEmail: body.supervisorEmail,
-            questions: [], // Initially empty
+            questions: [], 
             status: 'scheduled',
-            isActive: false // Prevent legacy auto-start
+            isActive: false 
         });
+
+        // Audit Log Entry
+        await AuditLog.create({
+            adminEmail: adminIdentifier,
+            actionType: 'CREATE_EXAM',
+            resourceId: exam._id.toString(),
+            details: `Exam Title: ${exam.title}`
+        });
+
+        // Trigger Web3 sync in the background
+        createExamOnWeb3(exam._id.toString(), exam.title, 0).catch(err => console.error("Web3 Background Sync Error:", err));
 
         return NextResponse.json({ message: 'Exam created successfully', exam }, { status: 201 });
     } catch (error) {

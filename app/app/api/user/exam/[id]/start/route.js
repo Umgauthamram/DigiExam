@@ -17,11 +17,21 @@ export async function GET(req, { params }) {
             return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
         }
 
+        // Shuffle helper
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
         // Fetch questions linked to this exam
         const questions = await Question.find({ examId: id }).lean();
 
-        // Sanitize questions: Remove isCorrect flag from options
-        const sanitizedQuestions = questions.map(q => ({
+        // Sanitize questions: Remove isCorrect flag from options & Shuffle Question Order
+        const sanitizedQuestions = shuffleArray(questions).map(q => ({
             _id: q._id,
             text: q.text,
             options: q.options.map(o => ({

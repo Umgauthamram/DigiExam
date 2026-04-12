@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PlayCircle, Clock, Calendar, CheckCircle, AlertTriangle, XCircle, RotateCcw } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
 export default function UserDashboard() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-slate-500">Loading...</div>}>
+            <DashboardContent />
+        </Suspense>
+    );
+}
+
+function DashboardContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
