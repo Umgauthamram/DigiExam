@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react';
 export const dynamic = 'force-dynamic';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { PlayCircle, Clock, Calendar, CheckCircle, AlertTriangle, XCircle, RotateCcw } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
@@ -17,7 +17,8 @@ export default function UserDashboard() {
 
 function DashboardContent() {
     const router = useRouter();
-    const searchParams = useSearchParams();
+    // Removed useSearchParams to avoid strict build-time Suspense bailouts
+    // We will parse the URL manually in the useEffect below.
 
     const [exams, setExams] = useState([]);
     const [results, setResults] = useState([]);
@@ -69,20 +70,23 @@ function DashboardContent() {
         setActiveSessions(sessions);
 
         // 2. Check URL for violation return
-        const isViolation = searchParams.get('violation') === 'true';
-        const vExamId = searchParams.get('examId');
-        const vReason = searchParams.get('reason');
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const isViolation = params.get('violation') === 'true';
+            const vExamId = params.get('examId');
+            const vReason = params.get('reason');
 
-        if (isViolation && vExamId) {
-            setViolationModal({
-                isOpen: true,
-                examId: vExamId,
-                reason: vReason || 'Security Policy Violation'
-            });
-            // Clean URL
-            router.replace('/user/dashboard');
+            if (isViolation && vExamId) {
+                setViolationModal({
+                    isOpen: true,
+                    examId: vExamId,
+                    reason: vReason || 'Security Policy Violation'
+                });
+                // Clean URL
+                router.replace('/user/dashboard');
+            }
         }
-    }, [searchParams, router]);
+    }, [router]);
 
     // Timer Sync
     useEffect(() => {
