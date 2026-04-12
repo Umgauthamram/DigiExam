@@ -1,10 +1,19 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, Suspense } from 'react';
+export const dynamic = 'force-dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, ArrowRight, Lock, Maximize, Loader2, AlertTriangle } from 'lucide-react';
 
 export default function ExamAccessPage({ params }) {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-slate-500 font-mono tracking-widest">AUTHENTICATING...</div>}>
+            <AccessContent params={params} />
+        </Suspense>
+    );
+}
+
+function AccessContent({ params }) {
     const unwrappedParams = use(params);
     const examId = unwrappedParams.id;
     const router = useRouter();

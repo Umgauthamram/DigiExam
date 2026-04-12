@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PlayCircle, Clock, Calendar, CheckCircle, AlertTriangle, XCircle, RotateCcw } from 'lucide-react';
