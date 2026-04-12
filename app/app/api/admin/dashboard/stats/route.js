@@ -4,6 +4,8 @@ import Exam from '@/models/Exam';
 import Question from '@/models/Question';
 import Result from '@/models/Result';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     try {
         await dbConnect();
@@ -24,20 +26,36 @@ export async function GET() {
                 .lean()
         ]);
 
+        // Optimizing: Fetch result counts for all recent exams in ONE query instead of N
+        const examIds = recentExams.map(e => e._id);
+
+        const counts = await Result.aggregate([
+            { $match: { exam: { $in: examIds } } },
+            { $group: { _id: "$exam", count: { $sum: 1 } } }
+        ]);
+
+        // Create a lookup map for counts: { examId: count }
+        const countMap = {};
+        counts.forEach(c => {
+            if (c._id) countMap[c._id.toString()] = c.count;
+        });
+
+        const recentExamsWithCounts = recentExams.map(exam => ({
+            _id: exam._id,
+            title: exam.title,
+            scheduledAt: exam.scheduledAt,
+            durationMinutes: exam.durationMinutes,
+            status: exam.status || (new Date(exam.scheduledAt) > new Date() ? 'scheduled' : 'active'),
+            resultCount: countMap[exam._id.toString()] || 0
+        }));
+
         return NextResponse.json({
             stats: {
                 totalExams,
                 totalQuestions,
                 totalResults
             },
-            recentExams: recentExams.map(exam => ({
-                _id: exam._id,
-                title: exam.title,
-                scheduledAt: exam.scheduledAt,
-                durationMinutes: exam.durationMinutes,
-                // Add status logic if needed (e.g. compare date)
-                status: new Date(exam.scheduledAt) > new Date() ? 'Scheduled' : 'Active'
-            }))
+            recentExams: recentExamsWithCounts
         }, { status: 200 });
 
     } catch (error) {

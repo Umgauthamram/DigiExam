@@ -23,6 +23,14 @@ const ResultSchema = new Schema({
         type: Number,
         default: 0,
     },
+    violationReason: {
+        type: String, // Reason for the violation (e.g., "Tab switch detected")
+        default: '',
+    },
+    timeTaken: {
+        type: Number, // In seconds
+        default: 0,
+    },
     answers: [{
         questionId: { type: Schema.Types.ObjectId, required: true },
         selectedOption: { type: String }, // The text or index of the selected option
@@ -34,6 +42,10 @@ const ResultSchema = new Schema({
         default: Date.now,
     },
 });
+
+// Indexes for faster queries
+ResultSchema.index({ exam: 1 });
+ResultSchema.index({ user: 1 });
 
 const Result = models.Result || model('Result', ResultSchema);
 

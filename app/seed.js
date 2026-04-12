@@ -23,7 +23,7 @@ async function seed() {
         console.log('Connected to MongoDB');
 
         // Create Admin
-        const adminEmail = 'admin@police.gov.in';
+        const adminEmail = 'admin@gmail.com';
         const adminExists = await User.findOne({ email: adminEmail });
 
         if (!adminExists) {
@@ -34,27 +34,27 @@ async function seed() {
                 password: hashedPassword,
                 role: 'admin',
             });
-            console.log('Admin created: admin@police.gov.in / admin123');
+            console.log(`Admin created: ${adminEmail} / admin123`);
         } else {
             console.log('Admin already exists');
         }
 
         // Create User
-        const userEmail = 'cadet@police.gov.in';
-        const userExists = await User.findOne({ email: userEmail });
+        // const userEmail = 'cadet@police.gov.in';
+        // const userExists = await User.findOne({ email: userEmail });
 
-        if (!userExists) {
-            const hashedPassword = await bcrypt.hash('cadet123', 10);
-            await User.create({
-                name: 'Cadet Rahul',
-                email: userEmail,
-                password: hashedPassword,
-                role: 'cadet',
-            });
-            console.log('User created: cadet@police.gov.in / cadet123');
-        } else {
-            console.log('User already exists');
-        }
+        // if (!userExists) {
+        //     const hashedPassword = await bcrypt.hash('cadet123', 10);
+        //     await User.create({
+        //         name: 'Cadet Rahul',
+        //         email: userEmail,
+        //         password: hashedPassword,
+        //         role: 'cadet',
+        //     });
+        //     console.log('User created: cadet@police.gov.in / cadet123');
+        // } else {
+        //     console.log('User already exists');
+        // }
 
         process.exit(0);
     } catch (error) {

@@ -17,7 +17,8 @@ export async function POST(req) {
             return NextResponse.json({ message: 'Mock Success' }, { status: 200 });
         }
 
-        const { examId, code } = await req.json();
+        const { examId, otp, code } = await req.json();
+        const inputCode = otp || code;
 
         const exam = await Exam.findById(examId);
 
@@ -25,14 +26,37 @@ export async function POST(req) {
             return NextResponse.json({ message: 'Exam not found' }, { status: 404 });
         }
 
-        // Check OTP Match
-        if (exam.accessCode !== code) {
-            return NextResponse.json({ message: 'Invalid Session Code' }, { status: 403 });
+        if (exam.status === 'ended') {
+            return NextResponse.json({ message: 'This exam session has ended.' }, { status: 403 });
         }
 
-        // Check Expiry
-        if (new Date() > new Date(exam.accessCodeExpiresAt)) {
-            return NextResponse.json({ message: 'Session Code Expired' }, { status: 403 });
+        // Check OTP Match
+        // Check Legacy OTP or Series
+        let isValid = false;
+
+        // 1. Check Legacy (Single OTP)
+        if (exam.accessCode && exam.accessCode === inputCode) {
+            if (new Date() <= new Date(exam.accessCodeExpiresAt)) {
+                isValid = true;
+            }
+        }
+
+        // 2. Check Series (Multi OTP)
+        if (!isValid && exam.accessCodeSeries && exam.accessCodeSeries.length > 0) {
+            const now = new Date();
+            const validCode = exam.accessCodeSeries.find(c =>
+                c.code === inputCode &&
+                new Date(c.startsAt) <= now &&
+                new Date(c.expiresAt) >= now
+            );
+
+            if (validCode) {
+                isValid = true;
+            }
+        }
+
+        if (!isValid) {
+            return NextResponse.json({ message: 'Invalid or Expired Session Code' }, { status: 403 });
         }
 
         return NextResponse.json({ message: 'Access Granted' }, { status: 200 });

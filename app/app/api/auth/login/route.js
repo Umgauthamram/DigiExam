@@ -9,7 +9,17 @@ const JWT_EXPIRES_IN = '1d';
 
 export async function POST(req) {
     try {
-        const { email, password } = await req.json();
+        const bodyText = await req.text();
+        
+        if (!JWT_SECRET) {
+            console.error('JWT_SECRET is not defined in environment variables');
+            return NextResponse.json({ message: 'Server configuration error' }, { status: 500 });
+        }
+
+        if (!bodyText) {
+            return NextResponse.json({ message: 'Empty request body' }, { status: 400 });
+        }
+        const { email, password } = JSON.parse(bodyText);
 
         // Try connecting to DB, fall back to mock if fails
         try {
@@ -50,7 +60,7 @@ export async function POST(req) {
     } catch (error) {
         console.error('Login error:', error);
         return NextResponse.json(
-            { message: 'Internal Server Error' },
+            { message: 'Internal Server Error', error: error.message },
             { status: 500 }
         );
     }

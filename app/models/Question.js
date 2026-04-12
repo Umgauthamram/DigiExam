@@ -8,7 +8,12 @@ const QuestionSchema = new Schema({
     options: [{
         text: { type: String, required: true },
         isCorrect: { type: Boolean, required: true },
+        explanation: { type: String, default: '' }
     }],
+    aiExplanation: {
+        type: String,
+        default: ''
+    },
     // For IPFS images/docs. If present, we show this.
     attachmentCid: {
         type: String,

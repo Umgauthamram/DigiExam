@@ -22,10 +22,14 @@ export default function LoginPage() {
                 body: JSON.stringify(formData),
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
-                console.error('Login failed:', data);
+                console.error('Login failed:', {
+                    status: res.status,
+                    statusText: res.statusText,
+                    data
+                });
                 throw new Error(data.message || 'Login failed');
             }
 

@@ -33,6 +33,18 @@ const ExamSchema = new Schema({
         type: Date,
         default: null,
     },
+    // Multi-OTP Support (Sequential)
+    accessCodeSeries: [{
+        code: String,
+        startsAt: Date,
+        expiresAt: Date
+    }],
+    status: {
+        type: String,
+        enum: ['scheduled', 'active', 'ended'],
+        default: 'scheduled',
+    },
+    // Deprecated: use status instead
     isActive: {
         type: Boolean,
         default: true,
@@ -42,6 +54,11 @@ const ExamSchema = new Schema({
         default: Date.now,
     },
 });
+
+// Prevent Mongoose overwrite warning or stale model in dev
+if (process.env.NODE_ENV !== 'production') {
+    delete models.Exam;
+}
 
 const Exam = models.Exam || model('Exam', ExamSchema);
 

@@ -2,6 +2,8 @@ import dbConnect from '@/lib/db';
 import Exam from '@/models/Exam';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req) {
     try {
         try {
@@ -10,7 +12,7 @@ export async function POST(req) {
             // Fallback for Mock Mode if DB fails
             return NextResponse.json({
                 message: 'Mock Exam Created',
-                exam: { _id: 'mock_exam_' + Date.now() }
+                exam: { _id: Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join('') }
             }, { status: 201 });
         }
 
@@ -23,6 +25,8 @@ export async function POST(req) {
             scheduledAt: body.scheduledAt,
             supervisorEmail: body.supervisorEmail,
             questions: [], // Initially empty
+            status: 'scheduled',
+            isActive: false // Prevent legacy auto-start
         });
 
         return NextResponse.json({ message: 'Exam created successfully', exam }, { status: 201 });

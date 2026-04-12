@@ -1,79 +1,119 @@
 import Link from 'next/link';
-import { Shield, ArrowRight, Lock, BookOpen } from 'lucide-react';
+import { Shield, ArrowRight, Lock, BookOpen, Zap, User, Menu } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
+    <div className="min-h-screen bg-black text-white overflow-hidden relative font-sans selection:bg-purple-500 selection:text-white">
+      {/* Background Ambient Glows */}
+      <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-purple-800/20 rounded-full blur-[120px] pointer-events-none animate-pulse duration-[10s]"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-800/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+      {/* Grid Pattern Overlay */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+
       {/* Navbar */}
-      <nav className="border-b border-slate-800 p-6 flex justify-between items-center bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+      <nav className="relative z-50 p-6 md:p-10 flex justify-between items-center max-w-7xl mx-auto">
         <div className="flex items-center gap-2">
-          <Shield className="h-8 w-8 text-blue-500" />
-          <span className="text-xl font-bold tracking-tight">DigiExam <span className="text-slate-500 text-sm font-normal">Secure Protocol</span></span>
+          <span className="text-xl font-bold tracking-tight text-white">DigiExam</span>
         </div>
-        <Link href="/login">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-semibold transition-all shadow-lg shadow-blue-900/20 active:scale-95">
-            Portal Login
+
+        <div className="flex items-center gap-6">
+          <Link href="/login">
+            <button className="hidden md:flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md px-6 py-2.5 rounded-full transition-all text-sm font-medium group">
+              <User className="w-4 h-4 text-purple-400 group-hover:text-white transition-colors" />
+              <span>Portal Login</span>
+            </button>
+          </Link>
+          <button className="md:hidden text-white">
+            <Menu className="w-6 h-6" />
           </button>
-        </Link>
+        </div>
       </nav>
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-5xl mx-auto space-y-12">
-        <div className="space-y-6 animate-in slide-in-from-bottom-5 duration-700">
-          <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-1.5 rounded-full text-sm font-medium border border-blue-500/20">
-            <Lock className="h-3 w-3" /> Official Police Academy Testing Platform
+      <main className="relative z-10 flex flex-col items-start justify-center min-h-[80vh] px-6 md:px-10 max-w-7xl mx-auto">
+
+        <div className="max-w-4xl space-y-8">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-purple-900/30 border border-purple-500/30 text-purple-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest backdrop-blur-sm">
+            <Zap className="w-3 h-3 fill-current" />
+            <span>Next-Gen Examination Platform</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400">
-            Advanced Internal <br /> Examination System
+
+          {/* Main Title */}
+          <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] text-white">
+            Your secure <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 animate-gradient-x">
+              + intelligent
+            </span> <br />
+            assessment.
           </h1>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Secure, encrypted, and AI-monitored evaluation platform for cadets.
-            Designed to ensure integrity and rapid assessment for the modern force.
+
+          {/* Description */}
+          <p className="text-lg md:text-xl text-slate-400 max-w-xl leading-relaxed border-l-2 border-purple-500/50 pl-6">
+            Designed for high-stakes environments. AI-monitored integrity,
+            instant grading, and comprehensive analytics for the modern institution.
           </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-wrap items-center gap-4 pt-4">
+            <Link href="/login">
+              <button className="bg-[#ccff00] hover:bg-[#b0db00] text-black px-8 py-4 rounded-full font-bold text-lg transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(204,255,0,0.3)] flex items-center gap-2">
+                Start Exam <ArrowRight className="w-5 h-5" />
+              </button>
+            </Link>
+            <Link href="/admin/dashboard">
+              <button className="bg-transparent border border-white/20 hover:bg-white/5 text-white px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center gap-2">
+                Admin Console
+              </button>
+            </Link>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left">
+        {/* Floating Abstract Element (Decoration) */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-gradient-to-br from-purple-600/30 to-blue-600/30 rounded-full blur-3xl opacity-50 pointer-events-none -z-10 mix-blend-screen"></div>
+
+        {/* Feature Cards Grid (Bottom) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-24">
           <FeatureCard
             icon={Shield}
-            title="Secure Environment"
-            desc="Full-screen enforcement and tab-switch detection to prevent malpractice during exams."
+            title="SecureLock Protocol"
+            desc="Full-screen enforcement preventing tab switches."
+            color="text-green-400"
+            bg="bg-green-400/10"
           />
           <FeatureCard
             icon={BookOpen}
-            title="Instant Grading"
-            desc="Automated evaluation logic with immediate feedback and score reporting."
+            title="Instant Results"
+            desc="Automated grading with detailed performance reports."
+            color="text-blue-400"
+            bg="bg-blue-400/10"
           />
           <FeatureCard
-            icon={ArrowRight}
-            title="AI Analysis"
-            desc="Smart insights into cadet performance with remediation suggestions."
+            icon={User}
+            title="Identity Verification"
+            desc="AI-powered candidate verification and monitoring."
+            color="text-purple-400"
+            bg="bg-purple-400/10"
           />
-        </div>
-
-        <div className="pt-8">
-          <Link href="/login">
-            <button className="h-14 px-8 rounded-full bg-white text-slate-900 hover:bg-slate-200 font-bold text-lg flex items-center gap-2 transition-all">
-              Access System <ArrowRight className="h-5 w-5" />
-            </button>
-          </Link>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 p-8 text-center text-slate-500 text-sm">
-        &copy; 2026 DigiExam Platform. Internal Use Only.
+      <footer className="relative z-10 border-t border-white/5 p-8 text-center text-slate-600 text-sm mt-12 bg-black/50 backdrop-blur-xl">
+        <p>&copy; 2026 DigiExam Platform. Secure Internal System.</p>
       </footer>
     </div>
   );
 }
 
-function FeatureCard({ icon: Icon, title, desc }) {
+function FeatureCard({ icon: Icon, title, desc, color, bg }) {
   return (
-    <div className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 p-6 rounded-2xl transition-colors">
-      <div className="bg-slate-900 w-12 h-12 rounded-xl flex items-center justify-center mb-4 border border-slate-700">
-        <Icon className="h-6 w-6 text-blue-500" />
+    <div className="group bg-zinc-900/40 hover:bg-zinc-900/60 backdrop-blur-sm border border-white/5 hover:border-white/10 p-8 rounded-3xl transition-all hover:translate-y-[-5px]">
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${bg} border border-white/5 group-hover:scale-110 transition-transform`}>
+        <Icon className={`h-6 w-6 ${color}`} />
       </div>
-      <h3 className="font-bold text-lg mb-2">{title}</h3>
+      <h3 className="font-bold text-xl mb-3 text-white">{title}</h3>
       <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
     </div>
   );
